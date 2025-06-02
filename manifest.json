@@ -10,9 +10,13 @@
   },
   "background": {
     "scripts": [
+      "/libs/md5.min.js",
       "background.js"
     ]
   },
+  "web_accessible_resources": [
+    "/libs/md5.min.js"
+  ],
   "icons": {
     "16": "logo/logo_16.png",
     "32": "logo/logo_32.png",

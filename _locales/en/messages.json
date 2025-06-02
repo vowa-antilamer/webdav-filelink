@@ -26,6 +26,12 @@
   "passwordHeader": {
     "message": "Password:"
   },
+  "authTypeHeader": {
+    "message": "Authentication Type:"
+  },
+  "label-folder": {
+    "message": "Default storage folder:"
+  },
   "status-not-configured": {
     "message": "Account is not properly configured"
   },

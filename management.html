@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <title></title>
+  <script src="/libs/md5.min.js"></script>
   <script src="management.js" type="application/javascript" defer=""></script>
   <link rel="stylesheet" href="management.css">
 </head>
@@ -34,6 +35,20 @@
         </label>
       </li>
       <li>
+        <label data-message="authTypeHeader">authType</label>
+          <select name="auth_type">
+            <option value="basic">Basic</option>
+            <option value="digest">Digest</option>
+          </select>
+      </li>
+      <li>
+        <label data-message="label-folder">Target Folder</label>
+        <select name="folder" id="folder">
+          <option value="">Please select</option>
+        </select>
+          <button type="button" name="refresh_button">Refresh</button>
+      </li>
+      <li>
         <label>
           <h2 data-message="publicURLHeader"></h2>
           <p data-message="publicURLDescription"></p>
@@ -44,7 +59,7 @@
 
     <div class="button-container">
       <div id="notifications">OK</div>
-      <button type="button">Save</button>
+      <button type="submit" name="save_button" >Save</button>
     </div>
   </form>
 </body>

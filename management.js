@@ -3,8 +3,11 @@ let private_url = form.querySelector(`input[name="private_url"]`);
 let public_url = form.querySelector(`input[name="public_url"]`);
 let username = form.querySelector(`input[name="username"]`);
 let password = form.querySelector(`input[name="password"]`);
+let authType = form.querySelector(`select[name="auth_type"]`);
+let folder_select = form.querySelector(`select[name="folder"]`);
 
-let button = form.querySelector("button");
+let button = form.querySelector(`button[name="save_button"]`);
+let refresh_button = form.querySelector(`button[name="refresh_button"]`);
 let accountId = new URL(location.href).searchParams.get("accountId");
 
 function setNotification(status, text) {
@@ -51,6 +54,20 @@ browser.storage.local.get([accountId]).then(accountInfo => {
     }
     if ("password" in accountInfo[accountId]) {
       password.value = accountInfo[accountId].password;
+    }
+    if ("auth_type" in accountInfo[accountId]) {
+      authType.value = accountInfo[accountId].auth_type;
+    } else {
+      authType.value = "basic";
+    }
+    if ("folder" in accountInfo[accountId]) {
+      const storedFolder = accountInfo[accountId].folder;
+      folder_select.innerHTML = "";
+      const opt = document.createElement("option");
+      opt.value = storedFolder;
+      opt.textContent = storedFolder;
+      opt.selected = true;
+      folder_select.appendChild(opt);
     }
     if ("status" in accountInfo[accountId]) {
       const status = accountInfo[accountId].status;
@@ -110,6 +127,8 @@ button.onclick = async () => {
       public_url: public_url_value,
       password: password.value,
       username: username.value,
+      auth_type: authType.value,
+      folder: folder_select.value,
       status: response.status
     },
   });
@@ -117,4 +136,60 @@ button.onclick = async () => {
   await new Promise(resolve => setTimeout(resolve, 1000));
   private_url.disabled = public_url.disabled = button.disabled = false;
 
+};
+
+refresh_button.onclick = async () => {
+  if (!form.checkValidity()) {
+    return;
+  }
+
+  refresh_button.disabled = true;
+  let url = private_url.value;
+  if (!url.endsWith("/")) url += "/";
+
+  const auth_type = authType.value;
+  const usernameVal = username.value;
+  const passwordVal = password.value;
+
+  try {
+    const response = await browser.runtime.sendMessage({
+      type: "list-folders",
+      url,
+      username: usernameVal,
+      password: passwordVal,
+      auth_type
+    });
+
+    if (!response.ok) throw new Error(`Error request: ${response.status}`);
+
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(response.text, "application/xml");
+    const responses = [...xml.getElementsByTagName("d:response")];
+
+    folder_select.innerHTML = "";
+
+    const basePath = new URL(url).pathname;
+
+    responses.forEach((resp) => {
+      const href = resp.getElementsByTagName("d:href")[0]?.textContent;
+      const isCollection = !!resp.getElementsByTagName("d:collection")[0];
+      if (!href || !isCollection) return;
+
+      const currentPath = new URL(href).pathname;
+      let relative = currentPath.replace(basePath, "").replace(/\/$/, "");
+      if (!relative || relative.includes("/")) return;
+
+      relative = decodeURIComponent(relative);
+
+      const opt = document.createElement("option");
+      opt.value = relative;
+      opt.textContent = relative;
+      folder_select.appendChild(opt);
+    });
+
+  } catch (e) {
+    alert("Error: " + e.message);
+  }
+
+  refresh_button.disabled = false;
 };
